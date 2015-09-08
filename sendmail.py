@@ -2,10 +2,9 @@
 import smtplib;
 import os;
 from openpyxl import load_workbook;
+import getpass;
 
 #For problems, feedback and/or bug reporting, please contact duaraghav8@gmail.com
-#Possible improvements: instead of storing password in plaintext in the script (dangerous!), we could store it in form of cyphertext. We could alternatively ask for password each time the script is run.
-
 def send_mail (to, subject, text, gmail_sender_id, server):
 	BODY = '\r\n'.join(['To: %s' % to, 'From: %s' % gmail_sender_id,'Subject: %s' % subject, '', text]);
 
@@ -16,7 +15,12 @@ def send_mail (to, subject, text, gmail_sender_id, server):
 		print ('error sending mail to ', gmail_sender_id);
 
 def get_recipients (excel_file):
-	data_file = load_workbook (excel_file);
+	try:
+		data_file = load_workbook (excel_file);
+	except Exception as e:
+		print (e);
+		os._exit (1);
+
 	sheet = data_file.active;
 	recipient_data = {};
 	name = '';
@@ -47,10 +51,11 @@ def initialize_server (gmail_sender_id, gmail_sender_passwd):
 if (__name__ == '__main__'):
 	mail_recipients = get_recipients ('recipients.xlsx');
 	print (mail_recipients);
-#	Gmail Account Sign In: Enter the User ID and password below, so it would seem that you're sending an email from this account
-	gmail_sender_id = '';
-	gmail_sender_passwd = '';
 	hotspot = '****';
+
+#	Ask for Login Credentials every time the script is run (tempporary)
+	gmail_sender_id = input ('email id: ');
+	gmail_sender_passwd = getpass.getpass ('Enter Password: ');
 
 #	TYPE SUBJECT and give the name of the text file which contains the mail's body
 	subject = input ('Subject: ');
@@ -61,6 +66,7 @@ if (__name__ == '__main__'):
 
 	confirm = input ('Everything set. Go? (y / n): ');
 	if (not confirm == 'y'):
+		print ("Quitting");
 		os._exit (1);
 
 	for recipient in list (mail_recipients.keys ()):
